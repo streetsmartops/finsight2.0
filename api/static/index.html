@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinSight — Executive Cloud Intelligence</title>
+<style>
+  :root {
+    --bg:        #0B0F14;
+    --panel:     #121821;
+    --panel-2:   #161E29;
+    --line:      #243140;
+    --ink:       #E6EDF3;
+    --ink-dim:   #8A9AAB;
+    --ink-faint: #5A6B7C;
+    --signal:    #35E0A1;   /* healthy / brand */
+    --warn:      #F2B441;
+    --crit:      #FF5C6C;
+    --watch:     #5BC8FF;
+    --accent:    #35E0A1;
+    --mono: "SF Mono", "JetBrains Mono", "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 4rem;
+  }
+  a { color: var(--accent); text-decoration: none; }
+
+  /* ---- Header ---- */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 1.1rem 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(11,15,20,0.86);
+    backdrop-filter: blur(10px);
+  }
+  .brand { display: flex; align-items: baseline; gap: 0.7rem; }
+  .brand .mark {
+    font-family: var(--mono); font-weight: 700; font-size: 1.15rem;
+    letter-spacing: 0.04em; color: var(--ink);
+  }
+  .brand .mark b { color: var(--signal); }
+  .brand .sub {
+    font-family: var(--mono); font-size: 0.68rem; color: var(--ink-faint);
+    letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  .health {
+    font-family: var(--mono); font-size: 0.7rem; color: var(--ink-dim);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--signal);
+         box-shadow: 0 0 0 0 rgba(53,224,161,0.5); animation: pulse 2.4s infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(53,224,161,0.45); }
+    70% { box-shadow: 0 0 0 7px rgba(53,224,161,0); }
+    100% { box-shadow: 0 0 0 0 rgba(53,224,161,0); }
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 1.6rem; }
+
+  .context-line {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--ink-faint);
+    letter-spacing: 0.04em; margin-bottom: 1.4rem;
+  }
+  .context-line span { color: var(--ink-dim); }
+
+  /* ---- KPI strip ---- */
+  .kpis {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; margin-bottom: 1.8rem;
+  }
+  .kpi { background: var(--panel); padding: 1.1rem 1.2rem; }
+  .kpi .label {
+    font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.5rem;
+  }
+  .kpi .value { font-family: var(--mono); font-size: 1.7rem; font-weight: 600; color: var(--ink); }
+  .kpi .value.sig { color: var(--signal); }
+  .kpi .value.crit { color: var(--crit); }
+  .kpi .delta { font-family: var(--mono); font-size: 0.68rem; color: var(--ink-dim); margin-top: 0.3rem; }
+
+  /* ---- Section grid ---- */
+  .grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 1.2rem; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(2,1fr); } }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden;
+  }
+  .panel h2 {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-dim); font-weight: 600;
+    padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel h2 .tag { color: var(--ink-faint); font-size: 0.62rem; }
+
+  /* ---- Ask box ---- */
+  .ask { margin-bottom: 1.2rem; }
+  .ask-row { display: flex; gap: 0.6rem; padding: 1.1rem; }
+  .ask input {
+    flex: 1; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 7px; padding: 0.7rem 0.9rem; color: var(--ink);
+    font-family: var(--sans); font-size: 0.92rem; outline: none;
+  }
+  .ask input:focus { border-color: var(--signal); }
+  .ask button {
+    background: var(--signal); color: #06281C; border: none; border-radius: 7px;
+    padding: 0 1.3rem; font-family: var(--mono); font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.06em; cursor: pointer; text-transform: uppercase; transition: filter .15s;
+  }
+  .ask button:hover { filter: brightness(1.08); }
+  .ask button:disabled { opacity: 0.5; cursor: wait; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; padding: 0 1.1rem 1.1rem; }
+  .chip {
+    font-family: var(--mono); font-size: 0.68rem; color: var(--ink-dim);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 20px;
+    padding: 0.35rem 0.75rem; cursor: pointer; transition: all .15s;
+  }
+  .chip:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  .answer { padding: 0 1.1rem 1.1rem; }
+  .answer-card {
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 1rem 1.1rem;
+  }
+  .answer-card .resp { font-size: 0.94rem; color: var(--ink); }
+  .answer-card .resp .cite {
+    font-family: var(--mono); font-size: 0.74rem; color: var(--signal);
+    background: rgba(53,224,161,0.1); padding: 0.05rem 0.3rem; border-radius: 4px;
+    white-space: nowrap;
+  }
+  .evidence { margin-top: 0.9rem; border-top: 1px solid var(--line); padding-top: 0.8rem; }
+  .evidence .ehead {
+    font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.55rem;
+  }
+  .ev {
+    display: flex; gap: 0.6rem; font-size: 0.78rem; color: var(--ink-dim);
+    padding: 0.3rem 0; align-items: baseline;
+  }
+  .ev .eid { font-family: var(--mono); font-size: 0.66rem; color: var(--signal); flex-shrink: 0; }
+  .ev .esrc {
+    font-family: var(--mono); font-size: 0.6rem; color: var(--ink-faint);
+    border: 1px solid var(--line); border-radius: 4px; padding: 0.05rem 0.35rem; flex-shrink: 0;
+  }
+  .llm-badge {
+    font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.08em;
+    padding: 0.15rem 0.45rem; border-radius: 4px; text-transform: uppercase;
+  }
+  .llm-on  { color: var(--signal); border: 1px solid rgba(53,224,161,0.4); }
+  .llm-off { color: var(--ink-faint); border: 1px solid var(--line); }
+
+  /* ---- Tables ---- */
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    font-family: var(--mono); font-size: 0.75rem; text-align: left;
+    padding: 0.55rem 1.1rem; border-bottom: 1px solid var(--line);
+  }
+  th { color: var(--ink-faint); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  td { color: var(--ink-dim); }
+  td.num { text-align: right; color: var(--ink); }
+  tr:last-child td { border-bottom: none; }
+
+  .status-pill {
+    font-family: var(--mono); font-size: 0.64rem; font-weight: 700;
+    padding: 0.15rem 0.5rem; border-radius: 4px; letter-spacing: 0.04em;
+  }
+  .st-CRITICAL { color: var(--crit);  background: rgba(255,92,108,0.14); }
+  .st-WARNING  { color: var(--warn);  background: rgba(242,180,65,0.14); }
+  .st-WATCH    { color: var(--watch); background: rgba(91,200,255,0.14); }
+  .st-HEALTHY  { color: var(--signal);background: rgba(53,224,161,0.12); }
+
+  .bar { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; width: 70px; display: inline-block; vertical-align: middle; margin-left: 0.5rem; }
+  .bar > i { display: block; height: 100%; border-radius: 3px; }
+
+  /* ---- Forecast chart ---- */
+  #chart { padding: 1.1rem; }
+  .legend { display: flex; gap: 1.2rem; padding: 0 1.1rem 0.9rem; font-family: var(--mono); font-size: 0.66rem; color: var(--ink-dim); }
+  .legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 0.35rem; border-radius: 2px; }
+
+  .foot {
+    margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.66rem; color: var(--ink-faint); line-height: 1.8;
+  }
+  .skeleton { color: var(--ink-faint); font-family: var(--mono); font-size: 0.78rem; padding: 1rem 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="mark">Fin<b>Sight</b></span>
+    <span class="sub">Executive Cloud Intelligence</span>
+  </div>
+  <div class="health">
+    <span class="dot"></span>
+    <span id="health-text">connecting…</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="context-line">
+    ESTATE: <span>Enterprise CX SaaS</span> &nbsp;·&nbsp; 167 AWS ST/MT DEPLOYMENTS &nbsp;·&nbsp;
+    PRODUCTS: <span>Engage / Analyze / Assist</span> &nbsp;·&nbsp; ENGINES: <span>Capacity-Mngt-App + Cost-Mngt-App</span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis" id="kpis">
+    <div class="kpi"><div class="label">Annualized Spend</div><div class="value sig" id="kpi-spend">—</div><div class="delta">projected run-rate</div></div>
+    <div class="kpi"><div class="label">Cost Anomalies</div><div class="value" id="kpi-anom">—</div><div class="delta" id="kpi-anom-d">excess spend flagged</div></div>
+    <div class="kpi"><div class="label">Capacity Alerts</div><div class="value" id="kpi-cap">—</div><div class="delta">streams over threshold</div></div>
+    <div class="kpi"><div class="label">Org / Footprint</div><div class="value" id="kpi-org">—</div><div class="delta">engineers · deployments</div></div>
+  </div>
+
+  <!-- Ask -->
+  <div class="panel ask">
+    <h2>Ask FinSight <span class="tag" id="llm-tag"></span></h2>
+    <div class="ask-row">
+      <input id="q" type="text" placeholder="e.g. Will we run out of capacity next quarter? Why did spend spike?" />
+      <button id="ask-btn" onclick="ask()">Ask</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="answer" id="answer"></div>
+  </div>
+
+  <div class="grid">
+    <!-- Capacity -->
+    <div class="panel">
+      <h2>Capacity Status <span class="tag">Capacity-Mngt-App · forecast</span></h2>
+      <div id="capacity"><div class="skeleton" style="padding-left:1.1rem">loading forecasts…</div></div>
+    </div>
+
+    <!-- Anomalies -->
+    <div class="panel">
+      <h2>Cost Anomalies <span class="tag">Cost-Mngt-App · robust-z</span></h2>
+      <div id="anomalies"><div class="skeleton" style="padding-left:1.1rem">scanning streams…</div></div>
+    </div>
+  </div>
+
+  <!-- Forecast chart -->
+  <div class="panel" style="margin-top:1.2rem">
+    <h2>Estate Spend Forecast <span class="tag" id="mape-tag">Capacity-Mngt-App · 45-day horizon</span></h2>
+    <div class="legend">
+      <span><i style="background:var(--ink-dim)"></i>history</span>
+      <span><i style="background:var(--signal)"></i>forecast</span>
+      <span><i style="background:var(--line)"></i>95% interval</span>
+    </div>
+    <div id="chart"><div class="skeleton">building forecast…</div></div>
+  </div>
+
+  <div class="foot">
+    FinSight v1.0 — capstone proof-of-work. Synthetic data, deterministic (seed=42). Capacity-Mngt-App: ridge-on-temporal-features forecaster.
+    Cost-Mngt-App: MAD-based robust anomaly detection + contribution attribution. RAG: TF-IDF retrieval over engine-derived fact cards,
+    grounded LLM composition (Anthropic Claude) with deterministic fallback. The ML owns the numbers; the language model only phrases them.
+  </div>
+</div>
+
+<script>
+const SAMPLES = [
+  "Will we run out of capacity next quarter?",
+  "Why did our cloud spend spike, and where?",
+  "Is Assist in us-east-1 healthy?",
+  "What's driving our annualized spend?",
+];
+
+async function j(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error(url + " -> " + r.status);
+  return r.json();
+}
+const usd = n => "$" + Math.round(n).toLocaleString();
+
+async function boot() {
+  // health
+  try {
+    const h = await j("/api/health");
+    document.getElementById("health-text").textContent =
+      "operational · " + h.facts_indexed + " facts indexed";
+    const tag = document.getElementById("llm-tag");
+    tag.innerHTML = h.llm_configured
+      ? '<span class="llm-badge llm-on">LLM grounded</span>'
+      : '<span class="llm-badge llm-off">template mode · set ANTHROPIC_API_KEY</span>';
+  } catch(e){ document.getElementById("health-text").textContent = "api offline"; }
+
+  // chips
+  const chips = document.getElementById("chips");
+  SAMPLES.forEach(s => {
+    const c = document.createElement("span");
+    c.className = "chip"; c.textContent = s;
+    c.onclick = () => { document.getElementById("q").value = s; ask(); };
+    chips.appendChild(c);
+  });
+
+  loadOverview(); loadCapacity(); loadAnomalies(); loadChart();
+}
+
+async function loadOverview() {
+  try {
+    const o = await j("/api/overview");
+    document.getElementById("kpi-spend").textContent = "$" + (o.annualized_spend_usd/1e6).toFixed(2) + "M";
+    document.getElementById("kpi-anom").textContent = o.anomalies_detected;
+    document.getElementById("kpi-anom-d").textContent = usd(o.anomaly_excess_usd) + " excess flagged";
+    const crit = (o.capacity_statuses.CRITICAL||0) + (o.capacity_statuses.WARNING||0);
+    const capEl = document.getElementById("kpi-cap");
+    capEl.textContent = crit;
+    capEl.className = "value" + (o.capacity_statuses.CRITICAL ? " crit" : "");
+    document.getElementById("kpi-org").textContent = o.team_size + " · " + o.deployments;
+  } catch(e){}
+}
+
+async function loadCapacity() {
+  try {
+    const d = await j("/api/capacity");
+    const top = d.rows.slice(0, 8);
+    let html = "<table><thead><tr><th>Product</th><th>Region</th><th>Util</th><th>Status</th><th>Breach</th></tr></thead><tbody>";
+    top.forEach(r => {
+      const col = r.current_util_pct >= 80 ? "var(--crit)" : r.current_util_pct >= 65 ? "var(--warn)" : "var(--signal)";
+      const breach = r.status === "CRITICAL" ? "now" : (r.breach_in_days != null ? r.breach_in_days + "d" : "—");
+      html += `<tr>
+        <td style="color:var(--ink)">${r.product}</td>
+        <td>${r.region}</td>
+        <td class="num">${r.current_util_pct}%<span class="bar"><i style="width:${Math.min(r.current_util_pct,100)}%;background:${col}"></i></span></td>
+        <td><span class="status-pill st-${r.status}">${r.status}</span></td>
+        <td>${breach}</td>
+      </tr>`;
+    });
+    html += "</tbody></table>";
+    document.getElementById("capacity").innerHTML = html;
+  } catch(e){ document.getElementById("capacity").innerHTML = '<div class="skeleton" style="padding-left:1.1rem">unavailable</div>'; }
+}
+
+async function loadAnomalies() {
+  try {
+    const d = await j("/api/anomalies");
+    const top = d.rows.slice(0, 6);
+    let html = "<table><thead><tr><th>Date</th><th>Service</th><th>Region</th><th>Excess</th><th>z</th></tr></thead><tbody>";
+    top.forEach(r => {
+      html += `<tr title="${(r.suspected_cause||'').replace(/"/g,'')}">
+        <td>${r.date.slice(5)}</td>
+        <td style="color:var(--ink)">${r.service}</td>
+        <td>${r.region}</td>
+        <td class="num" style="color:var(--crit)">+${usd(r.excess_usd)}</td>
+        <td class="num">${r.robust_z}</td>
+      </tr>`;
+    });
+    html += "</tbody></table>";
+    document.getElementById("anomalies").innerHTML = html;
+  } catch(e){ document.getElementById("anomalies").innerHTML = '<div class="skeleton" style="padding-left:1.1rem">unavailable</div>'; }
+}
+
+async function loadChart() {
+  try {
+    const d = await j("/api/forecast/cost");
+    document.getElementById("mape-tag").textContent = "Capacity-Mngt-App · 45-day · MAPE " + d.mape_pct + "%";
+    drawChart(d);
+  } catch(e){ document.getElementById("chart").innerHTML = '<div class="skeleton">unavailable</div>'; }
+}
+
+function drawChart(d) {
+  const W = 1080, H = 260, pad = {l:64, r:18, t:14, b:28};
+  const C = { grid:"#243140", axis:"#5A6B7C", hist:"#8A9AAB", fc:"#35E0A1" };
+  const hist = d.history, fc = d.forecast;
+  const all = hist.map(p=>({x:p.date, y:p.value, t:'h'}))
+    .concat(fc.map(p=>({x:p.date, y:p.yhat, lo:p.lower, hi:p.upper, t:'f'})));
+  const ys = all.map(p=>p.y).concat(fc.map(p=>p.upper)).concat(fc.map(p=>p.lower));
+  const ymin = Math.min(...ys)*0.95, ymax = Math.max(...ys)*1.03;
+  const n = all.length;
+  const X = i => pad.l + (i/(n-1))*(W-pad.l-pad.r);
+  const Y = v => pad.t + (1-(v-ymin)/(ymax-ymin))*(H-pad.t-pad.b);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">`;
+  // grid + y labels
+  for (let k=0;k<=4;k++){
+    const v = ymin + (k/4)*(ymax-ymin); const y = Y(v);
+    svg += `<line x1="${pad.l}" x2="${W-pad.r}" y1="${y}" y2="${y}" stroke="${C.grid}" stroke-width="0.5"/>`;
+    svg += `<text x="${pad.l-8}" y="${y+3}" fill="${C.axis}" font-size="9" text-anchor="end" font-family="monospace">$${Math.round(v/1000)}k</text>`;
+  }
+  // interval band
+  const histLen = hist.length;
+  let band = "";
+  fc.forEach((p,i)=>{ const idx = histLen + i; band += `${X(idx)},${Y(p.upper)} `; });
+  for (let i=fc.length-1;i>=0;i--){ const idx = histLen + i; band += `${X(idx)},${Y(fc[i].lower)} `; }
+  svg += `<polygon points="${band}" fill="${C.fc}" fill-opacity="0.10" stroke="none"/>`;
+  // history line
+  let hp = hist.map((p,i)=>`${i===0?'M':'L'}${X(i)},${Y(p.value)}`).join(" ");
+  svg += `<path d="${hp}" fill="none" stroke="${C.hist}" stroke-width="1.4"/>`;
+  // forecast line
+  let fp = "";
+  const joinIdx = histLen-1;
+  fp += `M${X(joinIdx)},${Y(hist[hist.length-1].value)} `;
+  fc.forEach((p,i)=>{ fp += `L${X(histLen+i)},${Y(p.yhat)} `; });
+  svg += `<path d="${fp}" fill="none" stroke="${C.fc}" stroke-width="1.8"/>`;
+  // divider
+  svg += `<line x1="${X(joinIdx)}" x2="${X(joinIdx)}" y1="${pad.t}" y2="${H-pad.b}" stroke="${C.fc}" stroke-width="0.5" stroke-dasharray="3 3" opacity="0.5"/>`;
+  svg += `<text x="${X(joinIdx)+4}" y="${pad.t+10}" fill="${C.fc}" font-size="8.5" font-family="monospace">today</text>`;
+  svg += `</svg>`;
+  document.getElementById("chart").innerHTML = svg;
+}
+
+async function ask() {
+  const q = document.getElementById("q").value.trim();
+  if (!q) return;
+  const btn = document.getElementById("ask-btn");
+  btn.disabled = true; btn.textContent = "…";
+  const out = document.getElementById("answer");
+  out.innerHTML = '<div class="skeleton">retrieving grounded facts…</div>';
+  try {
+    const a = await j("/api/ask", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({question:q})
+    });
+    let resp = a.answer.replace(/\[(FACT-\d{3})\]/g, '<span class="cite">$1</span>');
+    let ev = a.evidence.slice(0,4).map(e =>
+      `<div class="ev"><span class="eid">${e.id}</span><span class="esrc">${e.source}</span><span>${e.text}</span></div>`
+    ).join("");
+    const badge = a.used_llm
+      ? '<span class="llm-badge llm-on">LLM</span>'
+      : '<span class="llm-badge llm-off">template</span>';
+    out.innerHTML = `<div class="answer-card">
+      <div class="resp">${resp}</div>
+      <div class="evidence">
+        <div class="ehead">Evidence retrieved &nbsp;${badge}</div>
+        ${ev}
+      </div>
+    </div>`;
+  } catch(e) {
+    out.innerHTML = '<div class="skeleton">Query failed — is the API running?</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = "Ask";
+  }
+}
+
+document.getElementById("q").addEventListener("keydown", e => { if (e.key === "Enter") ask(); });
+boot();
+</script>
+</body>
+</html>
