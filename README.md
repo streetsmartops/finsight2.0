@@ -161,5 +161,3 @@ finsight/
 
 ---
 
-*Built as capstone proof-of-work. The intent is a working solution that can be
-demoed live and defended in interviews — not a slideware concept.*
