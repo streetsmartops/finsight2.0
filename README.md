@@ -10,10 +10,6 @@ conversational layer, so a CXO or PE investor can ask —
 — and get a **decisive, cited** answer where every number traces back to a model
 that actually computed it.
 
-This is the capstone proof-of-work for **UC Berkeley Executive Education —
-Artificial Intelligence & GenAI: Business Strategies and Applications**, grounded
-in a representative Enterprise CX SaaS estate (167 AWS deployments, ~$5M annual
-cloud spend, products Engage / Analyze / Assist).
 
 ---
 
