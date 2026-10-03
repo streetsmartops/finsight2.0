@@ -1,0 +1,13 @@
+# Render Blueprint — New → Blueprint → point at this repo, path demo/deploy/render.yaml
+# Free tier sleeps when idle; open the URL ~1 min before presenting.
+services:
+  - type: web
+    name: finsight
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY   # leave empty for template mode
+        sync: false

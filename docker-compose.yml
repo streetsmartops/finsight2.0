@@ -1,0 +1,14 @@
+# FinSight live-demo stack.
+#   docker compose up --build        -> http://localhost:8000
+# Offline-safe by default (template mode). For fluent LLM answers:
+#   ANTHROPIC_API_KEY=sk-... docker compose up --build
+services:
+  finsight:
+    build: .
+    image: finsight:demo
+    ports:
+      - "${FINSIGHT_PORT:-8000}:8000"
+    environment:
+      # Empty -> deterministic template mode (no network needed).
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+    restart: unless-stopped

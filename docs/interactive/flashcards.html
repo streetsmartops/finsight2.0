@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>FinSight Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: one study console — deck switcher on top, a single large card, controls and tally beneath. */
+:root{
+  --bg:#F3F6F8; --panel:#FFFFFF; --ink:#0E1A24; --muted:#56687A; --line:#D5DEE6;
+  --signal:#0F9F6E; --signal-ink:#FFFFFF; --crit:#C8324F; --chip:#E7EEF3;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A0F15; --panel:#111922; --ink:#E6EDF3; --muted:#8A9AAB; --line:#243140;
+  --signal:#35E0A1; --signal-ink:#06110C; --crit:#FF6B86; --chip:#18222D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0F15; --panel:#111922; --ink:#E6EDF3; --muted:#8A9AAB; --line:#243140;
+  --signal:#35E0A1; --signal-ink:#06110C; --crit:#FF6B86; --chip:#18222D; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px}
+h1{font:700 28px/1.1 var(--display);letter-spacing:.2px;margin:0;text-wrap:balance}
+h1 b{color:var(--signal);font-weight:700}
+.sub{color:var(--muted);font:13px var(--mono);letter-spacing:.3px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab{font:500 13px var(--mono);letter-spacing:.4px;text-transform:uppercase;border:1px solid var(--line);
+  background:var(--panel);color:var(--muted);border-radius:999px;padding:7px 14px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--signal);border-color:var(--signal);color:var(--signal-ink)}
+.tab .n{opacity:.75;margin-left:6px}
+.blurb{color:var(--muted);margin:0}
+.meter{display:flex;align-items:center;gap:12px;font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:6px;border-radius:3px;background:var(--chip);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .k{background:var(--signal)} .bar .r{background:var(--crit)}
+.card{perspective:1400px;min-height:300px;cursor:pointer;outline:none}
+.card:focus-visible .face{box-shadow:0 0 0 3px var(--signal)}
+.inner{position:relative;min-height:300px;transition:transform .5s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 28px;
+  display:flex;flex-direction:column;gap:14px;overflow:auto}
+.face.back{transform:rotateY(180deg)}
+.eyebrow{display:flex;justify-content:space-between;gap:8px;font:500 11.5px var(--mono);letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+.eyebrow .side{color:var(--signal)}
+.q{font:600 clamp(20px,3.4vw,27px)/1.3 var(--body);margin:auto 0;text-wrap:balance}
+.a{font-size:17px;line-height:1.6;margin:auto 0;max-width:65ch}
+.a code{font:14px var(--mono);background:var(--chip);padding:1px 5px;border-radius:4px}
+.hint{font:12px var(--mono);color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.group{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button.b{font:500 14px var(--body);border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;cursor:pointer;min-height:40px}
+button.b:hover{border-color:var(--signal)}
+button.b:focus-visible,.tab:focus-visible,summary:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+button.know{border-color:var(--signal);color:var(--signal)}
+button.again{border-color:var(--crit);color:var(--crit)}
+.pos{font:13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+details.all{border-top:1px solid var(--line);padding-top:14px}
+details.all summary{cursor:pointer;font:600 15px var(--body)}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.list .row{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.list .row b{display:block;margin-bottom:4px}
+.list .row .tag{font:11px var(--mono);text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.list .row.k{border-left:3px solid var(--signal)} .list .row.r{border-left:3px solid var(--crit)}
+kbd{font:12px var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--panel)}
+@media (max-width:520px){.face{padding:20px}.a{font-size:16px}}
+@media (prefers-reduced-motion:reduce){.inner{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Fin<b>Sight</b> 2.0 flashcards</h1>
+    <span class="sub" id="total"></span>
+  </header>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <p class="blurb" id="blurb"></p>
+  <div class="meter"><span id="tally"></span><div class="bar"><i class="k" id="bk"></i><i class="r" id="br"></i></div></div>
+
+  <div class="card" id="card" tabindex="0" role="button" aria-label="Flip card">
+    <div class="inner">
+      <div class="face front">
+        <div class="eyebrow"><span class="side">Question</span><span id="deckname-f"></span></div>
+        <div class="q" id="q"></div>
+        <div class="hint">Click or press <kbd>Space</kbd> to reveal</div>
+      </div>
+      <div class="face back">
+        <div class="eyebrow"><span class="side">Answer</span><span id="deckname-b"></span></div>
+        <div class="a" id="a"></div>
+        <div class="hint">Mark it: <kbd>K</kbd> know it · <kbd>R</kbd> review again</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="group">
+      <button class="b" id="prev" aria-label="Previous card">← Prev</button>
+      <button class="b" id="next" aria-label="Next card">Next →</button>
+      <span class="pos" id="pos"></span>
+    </div>
+    <div class="group">
+      <button class="b know" id="know">Know it</button>
+      <button class="b again" id="again">Review again</button>
+      <button class="b" id="shuffle">Shuffle</button>
+      <button class="b" id="reviewOnly">Review pile only</button>
+      <button class="b" id="reset">Reset marks</button>
+    </div>
+  </div>
+
+  <details class="all">
+    <summary>All cards in this deck</summary>
+    <div class="list" id="list"></div>
+  </details>
+</div>
+
+<script>
+const DATA = {"title": "FinSight 2.0 flashcards", "decks": [{"id": "exec", "name": "Executive (CXO)", "blurb": "What it does, why it's trustworthy, what to do with it.", "cards": [{"q": "What is FinSight in one sentence?", "a": "An executive cloud-intelligence layer: ask your cloud estate a question in plain English and get a grounded answer, where every number traces back to the engine that computed it."}, {"q": "Which two questions does FinSight answer?", "a": "Forward: *Will we run out of headroom, and what will it cost?* (Capacity-Mngt-App). Backward: *Where did the money go, and is it a problem?* (Cost-Mngt-App)."}, {"q": "What is the grounding contract?", "a": "The deterministic engines own every number; the language model only phrases them. Answers may cite only engine-computed facts, and an off-domain question is declined."}, {"q": "What does a [FACT-012] chip mean?", "a": "A citation. It points to a specific fact card in the evidence panel, produced by a named engine. You can audit any sentence."}, {"q": "What does CRITICAL mean in the capacity table?", "a": "The stream's 7-day average utilization is already at or above the 80% headroom threshold. Act now: scale or rightsize, then re-baseline the alert."}, {"q": "WARNING vs WATCH vs HEALTHY?", "a": "WARNING: forecast crosses 80% within 30 days. WATCH: crosses in 31–45 days. HEALTHY: no breach in the 45-day horizon."}, {"q": "What's the headline in the demo estate?", "a": "~$4.97M annualized across 167 deployments; 51 cost anomalies ($4,734 excess); Assist in us-east-1 is CRITICAL at ~82% utilization."}, {"q": "What happens if I ask something unrelated?", "a": "FinSight declines: 'I don't have a grounded fact that answers that.' No evidence means no answer, so it never bluffs."}, {"q": "Do I need the LLM for FinSight to work?", "a": "No. Without an API key a deterministic template composes the answer from the same facts. The LLM adds fluency, not numbers."}, {"q": "How do I phrase a good question?", "a": "Name the intent and the dimension: 'Is Assist in us-east-1 healthy?', 'What happened with RDS in eu-west-1?'. Use exact product, region and service names."}, {"q": "What decision does the anomaly feed drive?", "a": "Confirm the suspected root cause and apply the guardrail: tear down the load test, fix the log level, or delete the orphaned replica."}, {"q": "Why should finance trust it more than a chatbot?", "a": "Because it can't invent numbers: retrieval only indexes engine outputs, a relevance floor blocks off-topic answers, and tests enforce that every citation exists."}]}, {"id": "investor", "name": "Investor (PE / VC)", "blurb": "Value, moat, risk, and how it scales.", "cards": [{"q": "What problem is worth paying for here?", "a": "Cloud spend is a top-3 cost line for SaaS. Executives can't get fast, trustworthy answers about capacity risk and bill movements without analyst time. FinSight turns hours into seconds."}, {"q": "Who is the buyer?", "a": "CIO, CTO or VP Cloud Ops, and the CFO's FinOps function at cloud-heavy SaaS companies. PE operating partners also use it for portfolio-wide cost diligence."}, {"q": "What's the defensible idea (moat)?", "a": "Grounded AI: numbers come from auditable models, and the LLM is only the interface. That trust property is what lets an AI assistant sit in front of finance and boards."}, {"q": "What is the key AI risk, and how is it controlled?", "a": "Hallucinated figures. Controlled in three layers: index only derived facts, a retrieval relevance floor, and a prompt that forbids uncited numbers. The citation rule is tested."}, {"q": "Operational risk if the AI vendor is down?", "a": "Low. It automatically falls back to a deterministic template with identical numbers. Retrieval is local, with no vector-DB dependency."}, {"q": "How does value show up in the demo?", "a": "It flags $4,734 of above-baseline spend across 51 points. All 5 injected incidents (~$4.2k, 15 flags) are recovered with root causes, and one CRITICAL capacity stream is caught before customers feel it, all from one screen."}, {"q": "What would it take to go from demo to product?", "a": "Connect AWS CUR and CloudWatch (the frames already match), schedule corpus rebuilds, add SSO and multi-tenancy, then add Azure and GCP plus Slack and Teams channels."}, {"q": "Why is the tech stack cheap to run?", "a": "One Python process, ridge regression, robust statistics and TF-IDF. No GPUs, no vector DB. LLM calls are small (at most 6 short facts) and optional."}, {"q": "Natural expansion path?", "a": "Recommendations to automated guardrails (auto-teardown, rightsizing PRs), budget and commit planning, unit economics (cost per tenant), and a multi-cloud and portfolio view for PE."}, {"q": "What's the one-line pitch?", "a": "Ask your cloud estate anything: every number cited, nothing invented."}]}, {"id": "engineer", "name": "Engineer", "blurb": "Algorithms, internals, knobs, and tests.", "cards": [{"q": "Capacity-Mngt-App model and features?", "a": "Ridge regression (alpha 2 for capacity, 5 for cost) on linear trend, 7 day-of-week one-hots, and 2 weekly Fourier harmonics (sin and cos at period 7)."}, {"q": "How is the prediction interval computed?", "a": "yhat ± 1.96 × the standard deviation of in-sample residuals (ddof=1), giving about a 95% band."}, {"q": "How is 'already breached' decided?", "a": "Trailing 7-day mean ≥ threshold. This avoids reacting to a single noisy point. Otherwise the first forecast day with yhat ≥ threshold is the breach date."}, {"q": "Cost-Mngt-App detector formula?", "a": "Per (product, region, service) stream: z = (x_i − median(prior 21d)) / (1.4826 × MAD). Flag if z ≥ 4. It needs at least 10 prior points, and falls back to std if MAD ≈ 0."}, {"q": "Are all 51 anomalies real incidents?", "a": "No. 15 flags (~$4.2k) map to the 5 injected incidents. The other 36 are small (~$512 in total) and have no cause attached, likely month-start billing bumps the detector doesn't model. Fixes: a min-$ excess filter, a day-of-month feature, or a higher z."}, {"q": "Why median + MAD instead of mean + std?", "a": "Robustness. The spike being hunted can't inflate its own baseline, and 1.4826 × MAD matches std for normal data."}, {"q": "How does attribution work?", "a": "Per-day normalised spend by dimension for period A and period B. delta = B − A, and pct_of_change = delta / total delta. Rows are sorted by |delta|, and the shares sum to 100%."}, {"q": "What does the RAG index, and how big is it?", "a": "32 FactCards built from engine outputs (5 estate, 13 capacity, 14 cost), not the 15,120 raw cost rows. Each card has id, text, source and metadata."}, {"q": "Retriever configuration?", "a": "TF-IDF with 1–2-grams, English stopwords, and the token pattern [A-Za-z0-9][A-Za-z0-9-]+, so 'us-east-1' and 'EKS-Compute' stay whole. Cosine similarity, k=6."}, {"q": "What are the retrieval boosts?", "a": "+0.15 for each product, region or service named in the query. With risk intent: CRITICAL +0.30, WARNING +0.20, WATCH +0.10, anomaly cards +0.10."}, {"q": "How does the relevance floor work?", "a": "If the max raw cosine is below 0.04, return [] and the composer declines. Each returned card must also clear 0.04 on its own raw score, so boosts can't drag in unrelated facts."}, {"q": "How are citations extracted?", "a": "A regex FACT-\\d{3} over the answer text. Tests assert the set is non-empty for in-domain questions and a subset of corpus ids."}, {"q": "When does LLM composition fall back?", "a": "When no API key is set, the evidence is empty, or any exception is raised (network, auth, model). The template leads with a CRITICAL card, adds 2 more and an action cue."}, {"q": "Why is everything reproducible?", "a": "generate(seed=42) uses numpy default_rng, and state is built once at startup. The notebook, API, tests and demo video show identical numbers."}, {"q": "How many tests, and which are the contract tests?", "a": "14. The contract tests are test_rag_answers_are_grounded and test_rag_declines_when_no_facts; test_rag_surfaces_critical_first_for_risk_queries covers ranking."}, {"q": "How do you swap in real data?", "a": "Return the same cost_df and util_df schemas from CUR/Athena and CloudWatch, then change api/main.py::_bootstrap. Nothing downstream changes."}]}]};
+const ALL = {id:"all", name:"All decks", blurb:"Every card from the three decks, mixed.",
+  cards: DATA.decks.flatMap(d => d.cards.map(c => ({...c, deck:d.name})))};
+DATA.decks.forEach(d => d.cards.forEach(c => c.deck = d.name));
+const DECKS = [...DATA.decks, ALL];
+const keyOf = c => c.deck + "|" + c.q;
+
+let marks = {};
+try { marks = JSON.parse(localStorage.getItem("fs-marks") || "{}"); } catch(e) {}
+const saveMarks = () => { try { localStorage.setItem("fs-marks", JSON.stringify(marks)); } catch(e) {} };
+
+let deck = DECKS[0], order = [], i = 0, reviewOnly = false;
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const fmt = s => esc(s).replace(/\*([^*]+)\*/g,"<em>$1</em>").replace(/\b(FACT-\d{3}|[a-z_]+\(\)|[a-z]+_[a-z_]+(?:\.[a-z_:]+)?)\b/g,"<code>$1</code>");
+
+function buildOrder(shuffle){
+  order = deck.cards.map((_,k)=>k).filter(k => !reviewOnly || marks[keyOf(deck.cards[k])] === "r");
+  if (shuffle) for (let k=order.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[order[k],order[j]]=[order[j],order[k]];}
+  i = 0;
+}
+function render(){
+  $("card").classList.remove("flipped");
+  $("blurb").textContent = deck.blurb;
+  $("deckname-f").textContent = $("deckname-b").textContent = "";
+  if (!order.length){
+    $("q").textContent = reviewOnly ? "Nothing in the review pile. Turn off “Review pile only” to see every card." : "No cards.";
+    $("a").textContent = ""; $("pos").textContent = "0 / 0";
+  } else {
+    const c = deck.cards[order[i]];
+    $("q").innerHTML = fmt(c.q); $("a").innerHTML = fmt(c.a);
+    $("deckname-f").textContent = $("deckname-b").textContent = c.deck;
+    $("pos").textContent = (i+1) + " / " + order.length;
+  }
+  const k = deck.cards.filter(c => marks[keyOf(c)]==="k").length;
+  const r = deck.cards.filter(c => marks[keyOf(c)]==="r").length;
+  const n = deck.cards.length;
+  $("tally").textContent = `${k} known · ${r} to review · ${n-k-r} unseen`;
+  $("bk").style.width = (100*k/n)+"%"; $("br").style.width = (100*r/n)+"%";
+  $("reviewOnly").setAttribute("aria-pressed", reviewOnly);
+  $("reviewOnly").textContent = reviewOnly ? "Show all cards" : "Review pile only";
+  $("list").innerHTML = deck.cards.map(c => {
+    const m = marks[keyOf(c)] || "";
+    return `<div class="row ${m}"><span class="tag">${esc(c.deck)}${m==="k"?" · known":m==="r"?" · review":""}</span><b>${fmt(c.q)}</b>${fmt(c.a)}</div>`;
+  }).join("");
+}
+function selectDeck(d){
+  deck = d; reviewOnly = false; buildOrder(false);
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.id === d.id));
+  try { localStorage.setItem("fs-deck", d.id); } catch(e) {}
+  render();
+}
+const flip = () => order.length && $("card").classList.toggle("flipped");
+const step = s => { if(!order.length) return; i = (i + s + order.length) % order.length; render(); };
+const mark = m => { if(!order.length) return; marks[keyOf(deck.cards[order[i]])] = m; saveMarks();
+  if (reviewOnly && m==="k"){ order.splice(i,1); if(i>=order.length) i=0; render(); } else step(1); };
+
+$("tabs").innerHTML = DECKS.map(d => `<button class="tab" role="tab" data-id="${d.id}" aria-selected="false">${esc(d.name)}<span class="n">${d.cards.length}</span></button>`).join("");
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => selectDeck(DECKS.find(d => d.id === t.dataset.id)));
+$("total").textContent = ALL.cards.length + " cards · 3 audiences";
+$("card").onclick = flip;
+$("prev").onclick = () => step(-1); $("next").onclick = () => step(1);
+$("know").onclick = () => mark("k"); $("again").onclick = () => mark("r");
+$("shuffle").onclick = () => { buildOrder(true); render(); };
+$("reviewOnly").onclick = () => { reviewOnly = !reviewOnly; buildOrder(false); render(); };
+$("reset").onclick = () => { deck.cards.forEach(c => delete marks[keyOf(c)]); saveMarks(); buildOrder(false); render(); };
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("button,summary,input")) { if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return; }
+  if (e.key === " " || e.key === "Enter"){ e.preventDefault(); flip(); }
+  else if (e.key === "ArrowRight") step(1);
+  else if (e.key === "ArrowLeft") step(-1);
+  else if (e.key.toLowerCase() === "k") mark("k");
+  else if (e.key.toLowerCase() === "r") mark("r");
+});
+let start = DECKS[0];
+try { start = DECKS.find(d => d.id === localStorage.getItem("fs-deck")) || start; } catch(e) {}
+const hash = location.hash.slice(1); if (hash) start = DECKS.find(d => d.id === hash) || start;
+selectDeck(start);
+</script>
+
+</body>
+</html>
