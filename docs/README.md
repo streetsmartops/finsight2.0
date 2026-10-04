@@ -2,7 +2,7 @@
 
 | I want to… | Go to |
 |---|---|
-| **See it working in 3 minutes** | [Demo video](media/finsight_demo.mp4) (captioned) · [subtitles](media/finsight_demo.srt) · [narration script](media/narration.md) |
+| **See it working in 3 minutes** | [Demo video](media/finsight_demo.mp4) (captions + generated voice-over) · [subtitles](media/finsight_demo.srt) · [narration script](media/narration.md) |
 | **Run a live demo** | `./demo/demo.sh --offline`, then the [Presenter guide](../demo/PRESENTER_GUIDE.md) |
 | **Get a shareable URL** | [Deploy recipes](../demo/deploy/README.md): Render · Fly.io · Cloud Run · VM |
 | **Understand the system** | [Architecture](diagrams/ARCHITECTURE.md): context, containers, components, deployment |
@@ -17,4 +17,4 @@
 |---|---|---|
 | `flashcards/FLASHCARDS.md`, `finsight_anki.csv` | `flashcards/flashcards.json` | `python docs/flashcards/build_flashcards.py` |
 | `interactive/*.html` | `flashcards.json`, `MINDMAP.md` | `python docs/interactive/build.py` |
-| `media/finsight_demo.*`, `narration.md` | `SCENES` in `demo/video/record_demo.py` | `make video` (server running), then add `--publish` |
+| `media/finsight_demo.*`, `narration.md` | `SCENES` in `demo/video/record_demo.py` | `make video` or `make video-voiced` (server running); add `--publish` to copy here |

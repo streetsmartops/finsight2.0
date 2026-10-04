@@ -88,6 +88,17 @@ pip install playwright               # Chromium: /opt/pw-browsers or `playwright
 python demo/video/record_demo.py --publish
 ```
 This writes `docs/media/finsight_demo.mp4`, a matching `.srt`, and `narration.md` with timestamps.
+
+To add the generated voice-over (offline neural TTS, no microphone needed):
+```bash
+pip install piper-tts
+curl -L -O https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-libritts-high.tar.gz
+tar xzf voice-en-us-libritts-high.tar.gz
+python demo/video/record_demo.py --voice en-us-libritts-high.onnx --speaker 7 --publish
+```
+Each scene waits for its narration to finish. Identifiers such as `us-east-1` and `FACT-012` are spelled out for speech by the `SAY` table in `record_demo.py`.
+`--speaker` picks one of the 904 LibriTTS voices, and `--length-scale` slows the voice down (>1) or speeds it up (<1).
+The voice is CC BY 4.0, so keep the credit on the outro card if you republish.
 To change the story, edit the `SCENES` list in `demo/video/record_demo.py`. The video, subtitles and script are all generated from it.
 
 ---
