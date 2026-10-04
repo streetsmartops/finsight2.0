@@ -1,0 +1,12 @@
+.git
+**/__pycache__
+*.pyc
+.pytest_cache
+.venv
+venv
+.env
+notebooks
+deck
+docs
+demo/video/out
+*.pptx

@@ -1,0 +1,231 @@
+<title>FinSight Ideation Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: a left-to-right idea tree on a gridded canvas, filter rail above, workshop prompts below. */
+:root{
+  --bg:#F3F6F8; --panel:#FFFFFF; --ink:#0E1A24; --muted:#56687A; --line:#D5DEE6; --grid:#E6ECF1;
+  --signal:#0F9F6E; --signal-ink:#FFFFFF; --chip:#E7EEF3;
+  --now:#0F9F6E; --next:#2F6FD6; --later:#8A55C9; --today:#56687A;
+  --b1:#0F9F6E; --b2:#2F6FD6; --b3:#C2410C; --b4:#8A55C9; --b5:#B7791F; --b6:#0E7490; --b7:#C8324F; --b8:#4D7C0F; --b9:#6B7280;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A0F15; --panel:#111922; --ink:#E6EDF3; --muted:#8A9AAB; --line:#243140; --grid:#121B25;
+  --signal:#35E0A1; --signal-ink:#06110C; --chip:#18222D;
+  --now:#35E0A1; --next:#6AA8FF; --later:#C49BFF; --today:#8A9AAB;
+  --b1:#35E0A1; --b2:#6AA8FF; --b3:#FF9A5C; --b4:#C49BFF; --b5:#F5C451; --b6:#4FD1E8; --b7:#FF6B86; --b8:#A3E06A; --b9:#9AA5B1; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0F15; --panel:#111922; --ink:#E6EDF3; --muted:#8A9AAB; --line:#243140; --grid:#121B25;
+  --signal:#35E0A1; --signal-ink:#06110C; --chip:#18222D;
+  --now:#35E0A1; --next:#6AA8FF; --later:#C49BFF; --today:#8A9AAB;
+  --b1:#35E0A1; --b2:#6AA8FF; --b3:#FF9A5C; --b4:#C49BFF; --b5:#F5C451; --b6:#4FD1E8; --b7:#FF6B86; --b8:#A3E06A; --b9:#9AA5B1; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+h1{font:700 28px/1.1 var(--display);margin:0;text-wrap:balance}
+h1 b{color:var(--signal)}
+h2{font:700 20px/1.2 var(--display);margin:0 0 10px;text-wrap:balance}
+.sub{color:var(--muted);font:13px var(--mono)}
+.rail{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.chips,.acts{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 12.5px var(--mono);letter-spacing:.4px;text-transform:uppercase;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.chip[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:var(--chip)}
+.b{font:500 13.5px var(--body);border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;cursor:pointer}
+.b[aria-pressed="true"]{border-color:var(--signal);color:var(--signal)}
+.chip:focus-visible,.b:focus-visible,svg g.n:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+.canvas{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:78vh;
+  background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+svg{display:block}
+svg text{font-family:var(--body)}
+g.n{cursor:default} g.n.has{cursor:pointer}
+g.n rect.box{fill:var(--panel);stroke-width:1.2}
+g.n.dim{opacity:.18}
+g.n text.l{fill:var(--ink);font-size:13px}
+g.n.d1 text.l{font:600 14px var(--display);letter-spacing:.3px}
+g.n.root text.l{font:700 17px var(--display)}
+g.n text.t{font:500 10px var(--mono);letter-spacing:.6px}
+g.n text.tog{fill:var(--muted);font:500 13px var(--mono)}
+path.e{fill:none;stroke-width:1.6;opacity:.65}
+path.e.dim{opacity:.12}
+.outline{display:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.outline ul{list-style:none;margin:0;padding-left:16px;border-left:1px solid var(--line)}
+.outline>ul{padding-left:0;border-left:0}
+.outline li{margin:5px 0;min-width:0}
+.outline details>summary{cursor:pointer;font-weight:600}
+.outline .tg{font:500 10.5px var(--mono);text-transform:uppercase;letter-spacing:.6px;margin-left:6px;padding:1px 6px;border-radius:999px;border:1px solid currentColor}
+.outline li.dim{opacity:.3}
+body.outline-mode .outline{display:block} body.outline-mode .canvas{display:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid2>section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+ol.prompts{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11.5px var(--mono);text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+td:nth-child(2){font:500 13px var(--mono);color:var(--now)}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Fin<b>Sight</b> 2.0 ideation map</h1>
+    <span class="sub" id="stats"></span>
+  </header>
+  <div class="rail">
+    <div class="chips" id="chips" aria-label="Filter ideas by horizon"></div>
+    <div class="acts">
+      <button class="b" id="expand">Expand all</button>
+      <button class="b" id="collapse">Branches only</button>
+      <button class="b" id="mode" aria-pressed="false">Outline view</button>
+    </div>
+  </div>
+  <div class="canvas" id="canvas"><svg id="svg" role="img" aria-label="FinSight ideation mind map"></svg></div>
+  <nav class="outline" id="outline" aria-label="Mind map as outline"></nav>
+  <div class="grid2">
+    <section><h2>Prompts for the session</h2><ol class="prompts" id="prompts"></ol></section>
+    <section><h2>Suggested first sprint</h2><div class="tbl"><table id="sprint"></table></div></section>
+  </div>
+</div>
+
+<script>
+const TREE = /*__TREE__*/null;
+const PROMPTS = /*__PROMPTS__*/null;
+const SPRINT = /*__SPRINT__*/null;
+const HZ = ["today","now","next","later"];
+const HZ_LABEL = {today:"Built today", now:"Now · this sprint", next:"Next · a quarter", later:"Later · strategic"};
+
+// annotate: ids, branch index, depth, effective horizon (inherit 'today' under Today)
+let uid = 0;
+(function walk(n, d, b, inToday){
+  n.id = uid++; n.d = d; n.b = b; n.kids = n.kids || [];
+  if (d === 1 && /^today$/i.test(n.text)) inToday = true;
+  n.hz = n.tag || (inToday && d > 0 ? "today" : null);
+  n.collapsed = false;
+  n.kids.forEach((k, i) => walk(k, d+1, d === 0 ? i+1 : b, inToday));
+})(TREE, 0, 0, false);
+const all = []; (function f(n){ all.push(n); n.kids.forEach(f); })(TREE);
+const leaves = all.filter(n => !n.kids.length);
+const counts = Object.fromEntries(HZ.map(h => [h, leaves.filter(n => n.hz === h).length]));
+document.getElementById("stats").textContent =
+  `${counts.today} built · ${counts.now} now · ${counts.next} next · ${counts.later} later`;
+
+let filter = new Set();               // empty = show all
+const isOn = n => !filter.size || (n.hz && filter.has(n.hz)) || (!n.hz && subtreeHas(n));
+function subtreeHas(n){ return n.kids.some(k => (k.hz && filter.has(k.hz)) || (!k.hz && subtreeHas(k))); }
+
+// ---------- SVG map ----------
+const MAXW = {0:190, 1:200, x:250};
+const NS = "http://www.w3.org/2000/svg";
+// Measure with the SVG engine itself, so boxes fit whatever font actually rendered.
+const meter = document.createElementNS(NS, "svg");
+meter.setAttribute("style", "position:absolute;left:-9999px;top:0;width:10px;height:10px;visibility:hidden");
+meter.setAttribute("aria-hidden", "true");
+document.body.appendChild(meter);
+const mg = document.createElementNS(NS, "g"); meter.appendChild(mg);
+const mt = document.createElementNS(NS, "text"); mt.setAttribute("class", "l"); mg.appendChild(mt);
+function measure(text, d){
+  mg.setAttribute("class", `n d${Math.min(d,2)}${d===0?" root":""}`);
+  mt.textContent = text; return mt.getComputedTextLength();
+}
+function wrap(text, d){
+  const max = MAXW[d] || MAXW.x;
+  const words = text.split(" "), lines = []; let cur = "";
+  words.forEach(w => { const t = cur ? cur + " " + w : w; if (measure(t, d) > max && cur){ lines.push(cur); cur = w; } else cur = t; });
+  lines.push(cur);
+  return {lines, w: Math.max(...lines.map(l => measure(l, d)))};
+}
+
+const el = (t, a, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const color = n => n.d === 0 ? "var(--signal)" : `var(--b${((n.b-1)%9)+1})`;
+
+function draw(){
+  const svg = document.getElementById("svg"); svg.innerHTML = "";
+  const PADX = 14, GAPY = 10, COLGAP = 56;
+  const LHD = d => d === 0 ? 22 : d === 1 ? 19 : 17;
+  const vis = []; (function f(n){ vis.push(n); if (!n.collapsed) n.kids.forEach(f); })(TREE);
+  vis.forEach(n => { const w = wrap(n.text, n.d); n.lines = w.lines;
+    n.tw = Math.ceil(w.w) + (n.hz && n.d > 0 && n.hz !== "today" ? 54 : 0) + (n.kids.length ? 22 : 0);
+    n.w = n.tw + PADX*2; n.h = n.lines.length*LHD(n.d) + 14; });
+  const colW = []; vis.forEach(n => colW[n.d] = Math.max(colW[n.d]||0, n.w));
+  const colX = [24]; for (let d=1; d<colW.length; d++) colX[d] = colX[d-1] + colW[d-1] + COLGAP;
+  let y = 20;
+  (function place(n){
+    const kids = n.collapsed ? [] : n.kids;
+    if (!kids.length){ n.y = y; y += n.h + GAPY; return; }
+    kids.forEach(place);
+    const top = kids[0].y + kids[0].h/2, bot = kids[kids.length-1].y + kids[kids.length-1].h/2;
+    n.y = (top + bot)/2 - n.h/2;
+  })(TREE);
+  const W = colX[colX.length-1] + colW[colW.length-1] + 24, H = y + 10;
+  svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const ge = el("g", {}, svg), gn = el("g", {}, svg);
+  vis.forEach(n => { n.x = colX[n.d]; });
+  vis.forEach(n => { if (n.collapsed) return; n.kids.forEach(k => {
+    const x1 = n.x + n.w, y1 = n.y + n.h/2, x2 = k.x, y2 = k.y + k.h/2, mx = (x1+x2)/2;
+    el("path", {d:`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`, class:"e" + (isOn(k) ? "" : " dim"), stroke: color(k)}, ge);
+  }); });
+  vis.forEach(n => {
+    const g = el("g", {class:`n d${Math.min(n.d,2)}${n.d===0?" root":""}${n.kids.length?" has":""}${isOn(n)?"":" dim"}`, transform:`translate(${n.x},${n.y})`}, gn);
+    if (n.kids.length){ g.setAttribute("tabindex","0"); g.setAttribute("role","button");
+      g.setAttribute("aria-expanded", !n.collapsed); g.setAttribute("aria-label", n.text); }
+    el("rect", {class:"box", width:n.w, height:n.h, rx: n.d===0 ? 22 : 8, stroke: color(n),
+      "stroke-width": n.d <= 1 ? 2 : 1.2}, g);
+    if (n.d === 0) g.querySelector("rect").setAttribute("style", "fill:var(--chip)");
+    n.lines.forEach((l, i) => { const t = el("text", {class:"l", x:PADX, y: 7 + LHD(n.d)*(i+1) - 4}, g); t.textContent = l; });
+    if (n.hz && n.d > 0 && n.hz !== "today"){
+      const tx = PADX + n.tw - (n.kids.length ? 22 : 0) - 44;
+      el("rect", {x:tx, y:n.h/2-8, width:42, height:16, rx:8, fill:"none", stroke:`var(--${n.hz})`}, g);
+      const t = el("text", {class:"t", x:tx+21, y:n.h/2+3.5, "text-anchor":"middle", fill:`var(--${n.hz})`}, g); t.textContent = n.hz.toUpperCase();
+    }
+    if (n.kids.length){ const t = el("text", {class:"tog", x:n.w-PADX-8, y:n.h/2+4.5, "text-anchor":"middle"}, g); t.textContent = n.collapsed ? "+" : "−"; }
+    const toggle = () => { n.collapsed = !n.collapsed; render(); };
+    if (n.kids.length && n.d > 0){ g.addEventListener("click", toggle); g.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } }); }
+  });
+}
+
+// ---------- Outline ----------
+function outline(){
+  const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  const tag = n => n.hz && n.hz !== "today" ? `<span class="tg" style="color:var(--${n.hz})">${n.hz}</span>` : "";
+  const li = n => n.kids.length
+    ? `<li class="${isOn(n)?"":"dim"}"><details ${n.d<1||!n.collapsed?"open":""}><summary style="color:${color(n)}">${esc(n.text)}${tag(n)}</summary><ul>${n.kids.map(li).join("")}</ul></details></li>`
+    : `<li class="${isOn(n)?"":"dim"}">${esc(n.text)}${tag(n)}</li>`;
+  document.getElementById("outline").innerHTML = `<ul>${li(TREE)}</ul>`;
+}
+function render(){ draw(); outline(); }
+
+// ---------- Controls ----------
+const chips = document.getElementById("chips");
+chips.innerHTML = `<button class="chip" data-h="" aria-pressed="true">All</button>` +
+  HZ.map(h => `<button class="chip" data-h="${h}" aria-pressed="false"><i style="background:var(--${h})"></i>${HZ_LABEL[h]} · ${counts[h]}</button>`).join("");
+chips.querySelectorAll(".chip").forEach(c => c.onclick = () => {
+  const h = c.dataset.h;
+  if (!h) filter.clear(); else filter.has(h) ? filter.delete(h) : filter.add(h);
+  chips.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.h ? filter.has(x.dataset.h) : !filter.size));
+  render();
+});
+document.getElementById("expand").onclick = () => { all.forEach(n => n.collapsed = false); render(); };
+document.getElementById("collapse").onclick = () => { all.forEach(n => n.collapsed = n.d >= 1 && n.kids.length > 0); render(); };
+const modeBtn = document.getElementById("mode");
+const setMode = o => { document.body.classList.toggle("outline-mode", o); modeBtn.setAttribute("aria-pressed", o);
+  modeBtn.textContent = o ? "Map view" : "Outline view"; try { localStorage.setItem("fs-mm-mode", o ? "o" : "m"); } catch(e) {} };
+modeBtn.onclick = () => setMode(!document.body.classList.contains("outline-mode"));
+let startOutline = window.matchMedia("(max-width: 700px)").matches;
+try { const m = localStorage.getItem("fs-mm-mode"); if (m) startOutline = m === "o"; } catch(e) {}
+setMode(startOutline);
+
+document.getElementById("prompts").innerHTML = PROMPTS.map(p => `<li>${p}</li>`).join("");
+document.getElementById("sprint").innerHTML = `<thead><tr>${SPRINT.head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>` +
+  SPRINT.rows.map(r => `<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("") + "</tbody>";
+
+render();
+// Open with the centre of the map in view.
+const cvs = document.getElementById("canvas");
+cvs.scrollTop = Math.max(0, TREE.y + TREE.h/2 - cvs.clientHeight/2);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+</script>

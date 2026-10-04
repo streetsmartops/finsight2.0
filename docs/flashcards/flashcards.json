@@ -1,0 +1,178 @@
+{
+  "title": "FinSight 2.0 flashcards",
+  "decks": [
+    {
+      "id": "exec",
+      "name": "Executive (CXO)",
+      "blurb": "What it does, why it's trustworthy, what to do with it.",
+      "cards": [
+        {
+          "q": "What is FinSight in one sentence?",
+          "a": "An executive cloud-intelligence layer: ask your cloud estate a question in plain English and get a grounded answer, where every number traces back to the engine that computed it."
+        },
+        {
+          "q": "Which two questions does FinSight answer?",
+          "a": "Forward: *Will we run out of headroom, and what will it cost?* (Capacity-Mngt-App). Backward: *Where did the money go, and is it a problem?* (Cost-Mngt-App)."
+        },
+        {
+          "q": "What is the grounding contract?",
+          "a": "The deterministic engines own every number; the language model only phrases them. Answers may cite only engine-computed facts, and an off-domain question is declined."
+        },
+        {
+          "q": "What does a [FACT-012] chip mean?",
+          "a": "A citation. It points to a specific fact card in the evidence panel, produced by a named engine. You can audit any sentence."
+        },
+        {
+          "q": "What does CRITICAL mean in the capacity table?",
+          "a": "The stream's 7-day average utilization is already at or above the 80% headroom threshold. Act now: scale or rightsize, then re-baseline the alert."
+        },
+        {
+          "q": "WARNING vs WATCH vs HEALTHY?",
+          "a": "WARNING: forecast crosses 80% within 30 days. WATCH: crosses in 31–45 days. HEALTHY: no breach in the 45-day horizon."
+        },
+        {
+          "q": "What's the headline in the demo estate?",
+          "a": "~$4.97M annualized across 167 deployments; 51 cost anomalies ($4,734 excess); Assist in us-east-1 is CRITICAL at ~82% utilization."
+        },
+        {
+          "q": "What happens if I ask something unrelated?",
+          "a": "FinSight declines: 'I don't have a grounded fact that answers that.' No evidence means no answer, so it never bluffs."
+        },
+        {
+          "q": "Do I need the LLM for FinSight to work?",
+          "a": "No. Without an API key a deterministic template composes the answer from the same facts. The LLM adds fluency, not numbers."
+        },
+        {
+          "q": "How do I phrase a good question?",
+          "a": "Name the intent and the dimension: 'Is Assist in us-east-1 healthy?', 'What happened with RDS in eu-west-1?'. Use exact product, region and service names."
+        },
+        {
+          "q": "What decision does the anomaly feed drive?",
+          "a": "Confirm the suspected root cause and apply the guardrail: tear down the load test, fix the log level, or delete the orphaned replica."
+        },
+        {
+          "q": "Why should finance trust it more than a chatbot?",
+          "a": "Because it can't invent numbers: retrieval only indexes engine outputs, a relevance floor blocks off-topic answers, and tests enforce that every citation exists."
+        }
+      ]
+    },
+    {
+      "id": "investor",
+      "name": "Investor (PE / VC)",
+      "blurb": "Value, moat, risk, and how it scales.",
+      "cards": [
+        {
+          "q": "What problem is worth paying for here?",
+          "a": "Cloud spend is a top-3 cost line for SaaS. Executives can't get fast, trustworthy answers about capacity risk and bill movements without analyst time. FinSight turns hours into seconds."
+        },
+        {
+          "q": "Who is the buyer?",
+          "a": "CIO, CTO or VP Cloud Ops, and the CFO's FinOps function at cloud-heavy SaaS companies. PE operating partners also use it for portfolio-wide cost diligence."
+        },
+        {
+          "q": "What's the defensible idea (moat)?",
+          "a": "Grounded AI: numbers come from auditable models, and the LLM is only the interface. That trust property is what lets an AI assistant sit in front of finance and boards."
+        },
+        {
+          "q": "What is the key AI risk, and how is it controlled?",
+          "a": "Hallucinated figures. Controlled in three layers: index only derived facts, a retrieval relevance floor, and a prompt that forbids uncited numbers. The citation rule is tested."
+        },
+        {
+          "q": "Operational risk if the AI vendor is down?",
+          "a": "Low. It automatically falls back to a deterministic template with identical numbers. Retrieval is local, with no vector-DB dependency."
+        },
+        {
+          "q": "How does value show up in the demo?",
+          "a": "It flags $4,734 of above-baseline spend across 51 points. All 5 injected incidents (~$4.2k, 15 flags) are recovered with root causes, and one CRITICAL capacity stream is caught before customers feel it, all from one screen."
+        },
+        {
+          "q": "What would it take to go from demo to product?",
+          "a": "Connect AWS CUR and CloudWatch (the frames already match), schedule corpus rebuilds, add SSO and multi-tenancy, then add Azure and GCP plus Slack and Teams channels."
+        },
+        {
+          "q": "Why is the tech stack cheap to run?",
+          "a": "One Python process, ridge regression, robust statistics and TF-IDF. No GPUs, no vector DB. LLM calls are small (at most 6 short facts) and optional."
+        },
+        {
+          "q": "Natural expansion path?",
+          "a": "Recommendations to automated guardrails (auto-teardown, rightsizing PRs), budget and commit planning, unit economics (cost per tenant), and a multi-cloud and portfolio view for PE."
+        },
+        {
+          "q": "What's the one-line pitch?",
+          "a": "Ask your cloud estate anything: every number cited, nothing invented."
+        }
+      ]
+    },
+    {
+      "id": "engineer",
+      "name": "Engineer",
+      "blurb": "Algorithms, internals, knobs, and tests.",
+      "cards": [
+        {
+          "q": "Capacity-Mngt-App model and features?",
+          "a": "Ridge regression (alpha 2 for capacity, 5 for cost) on linear trend, 7 day-of-week one-hots, and 2 weekly Fourier harmonics (sin and cos at period 7)."
+        },
+        {
+          "q": "How is the prediction interval computed?",
+          "a": "yhat ± 1.96 × the standard deviation of in-sample residuals (ddof=1), giving about a 95% band."
+        },
+        {
+          "q": "How is 'already breached' decided?",
+          "a": "Trailing 7-day mean ≥ threshold. This avoids reacting to a single noisy point. Otherwise the first forecast day with yhat ≥ threshold is the breach date."
+        },
+        {
+          "q": "Cost-Mngt-App detector formula?",
+          "a": "Per (product, region, service) stream: z = (x_i − median(prior 21d)) / (1.4826 × MAD). Flag if z ≥ 4. It needs at least 10 prior points, and falls back to std if MAD ≈ 0."
+        },
+        {
+          "q": "Are all 51 anomalies real incidents?",
+          "a": "No. 15 flags (~$4.2k) map to the 5 injected incidents. The other 36 are small (~$512 in total) and have no cause attached, likely month-start billing bumps the detector doesn't model. Fixes: a min-$ excess filter, a day-of-month feature, or a higher z."
+        },
+        {
+          "q": "Why median + MAD instead of mean + std?",
+          "a": "Robustness. The spike being hunted can't inflate its own baseline, and 1.4826 × MAD matches std for normal data."
+        },
+        {
+          "q": "How does attribution work?",
+          "a": "Per-day normalised spend by dimension for period A and period B. delta = B − A, and pct_of_change = delta / total delta. Rows are sorted by |delta|, and the shares sum to 100%."
+        },
+        {
+          "q": "What does the RAG index, and how big is it?",
+          "a": "32 FactCards built from engine outputs (5 estate, 13 capacity, 14 cost), not the 15,120 raw cost rows. Each card has id, text, source and metadata."
+        },
+        {
+          "q": "Retriever configuration?",
+          "a": "TF-IDF with 1–2-grams, English stopwords, and the token pattern [A-Za-z0-9][A-Za-z0-9-]+, so 'us-east-1' and 'EKS-Compute' stay whole. Cosine similarity, k=6."
+        },
+        {
+          "q": "What are the retrieval boosts?",
+          "a": "+0.15 for each product, region or service named in the query. With risk intent: CRITICAL +0.30, WARNING +0.20, WATCH +0.10, anomaly cards +0.10."
+        },
+        {
+          "q": "How does the relevance floor work?",
+          "a": "If the max raw cosine is below 0.04, return [] and the composer declines. Each returned card must also clear 0.04 on its own raw score, so boosts can't drag in unrelated facts."
+        },
+        {
+          "q": "How are citations extracted?",
+          "a": "A regex FACT-\\d{3} over the answer text. Tests assert the set is non-empty for in-domain questions and a subset of corpus ids."
+        },
+        {
+          "q": "When does LLM composition fall back?",
+          "a": "When no API key is set, the evidence is empty, or any exception is raised (network, auth, model). The template leads with a CRITICAL card, adds 2 more and an action cue."
+        },
+        {
+          "q": "Why is everything reproducible?",
+          "a": "generate(seed=42) uses numpy default_rng, and state is built once at startup. The notebook, API, tests and demo video show identical numbers."
+        },
+        {
+          "q": "How many tests, and which are the contract tests?",
+          "a": "14. The contract tests are test_rag_answers_are_grounded and test_rag_declines_when_no_facts; test_rag_surfaces_critical_first_for_risk_queries covers ranking."
+        },
+        {
+          "q": "How do you swap in real data?",
+          "a": "Return the same cost_df and util_df schemas from CUR/Athena and CloudWatch, then change api/main.py::_bootstrap. Nothing downstream changes."
+        }
+      ]
+    }
+  ]
+}

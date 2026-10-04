@@ -64,6 +64,15 @@ finance. It is enforced in code (a retrieval relevance floor) and verified in te
 
 ---
 
+## Demo kit & docs
+
+- **Watch:** [3-minute captioned demo](docs/media/finsight_demo.mp4), recorded from the live cockpit
+- **Present:** `./demo/demo.sh --offline` (venv, tests, server, smoke test) · `docker compose up --build` · [presenter guide](demo/PRESENTER_GUIDE.md) · [deploy recipes](demo/deploy/README.md)
+- **Understand:** [architecture](docs/diagrams/ARCHITECTURE.md) · [data flow](docs/diagrams/DATA_FLOW.md) · [BDD flows](docs/diagrams/BDD_FLOWS.md) · [how-to](docs/HOW_TO.md)
+- **Learn and ideate:** [flashcards](docs/flashcards/FLASHCARDS.md) · [mind map](docs/MINDMAP.md) · [all docs](docs/README.md)
+
+---
+
 ## Quickstart
 
 ```bash
@@ -117,7 +126,9 @@ finsight/
 │   └── FinSight_Walkthrough.ipynb   # reproducible end-to-end walkthrough
 ├── tests/
 │   └── test_finsight.py      # engines + grounding-contract tests (14 tests)
-├── docs/                     # cockpit screenshots
+├── docs/                     # diagrams, BDD specs, how-to, flashcards, mind map, demo video
+├── demo/                     # one-command demo, smoke test, presenter guide, deploy recipes, video recorder
+├── Dockerfile · docker-compose.yml · Makefile
 ├── requirements.txt
 └── README.md
 ```
