@@ -66,7 +66,7 @@ finance. It is enforced in code (a retrieval relevance floor) and verified in te
 
 ## Demo kit & docs
 
-- **Watch:** [3-minute captioned demo](docs/media/finsight_demo.mp4), recorded from the live cockpit
+- **Watch:** [3½-minute narrated demo](docs/media/finsight_demo.mp4), recorded from the live cockpit with captions and a generated voice-over
 - **Present:** `./demo/demo.sh --offline` (venv, tests, server, smoke test) · `docker compose up --build` · [presenter guide](demo/PRESENTER_GUIDE.md) · [deploy recipes](demo/deploy/README.md)
 - **Understand:** [architecture](docs/diagrams/ARCHITECTURE.md) · [data flow](docs/diagrams/DATA_FLOW.md) · [BDD flows](docs/diagrams/BDD_FLOWS.md) · [how-to](docs/HOW_TO.md)
 - **Learn and ideate:** [flashcards](docs/flashcards/FLASHCARDS.md) · [mind map](docs/MINDMAP.md) · [all docs](docs/README.md)

@@ -1,60 +1,60 @@
 1
-00:00:01,154 --> 00:00:11,155
+00:00:01,571 --> 00:00:11,967
 FinSight 2.0 — the executive cloud intelligence layer. Ask your cloud estate a question in plain English and get a grounded, cited answer.
 
 2
-00:00:11,155 --> 00:00:25,555
+00:00:11,967 --> 00:00:29,289
 Under the hood, two deterministic engines own every number. Capacity-Mngt-App forecasts utilisation and spend; Cost-Mngt-App detects anomalies and attributes cost. Their outputs become fact cards, and the RAG layer can only cite those facts.
 
 3
-00:00:25,555 --> 00:00:37,555
+00:00:29,289 --> 00:00:43,691
 The executive cockpit: one screen, three engines' worth of signal.
 
 4
-00:00:37,555 --> 00:00:50,355
+00:00:43,691 --> 00:01:00,542
 KPI strip: ~$4.97M annualized spend · 51 anomalies · 1 CRITICAL capacity stream
 
 5
-00:00:50,355 --> 00:00:59,157
+00:01:00,542 --> 00:01:12,993
 Capacity-Mngt-App: worst-first. Assist / us-east-1 is already over the 80% headroom line.
 
 6
-00:00:59,157 --> 00:01:11,957
+00:01:12,993 --> 00:01:28,103
 Cost-Mngt-App: spikes scored by robust z (median + MAD) — hover a row for the root cause.
 
 7
-00:01:11,957 --> 00:01:21,557
+00:01:28,103 --> 00:01:39,323
 45-day spend forecast with a 95% prediction interval — in-sample MAPE ≈ 1.2%.
 
 8
-00:01:21,557 --> 00:01:26,357
+00:01:39,323 --> 00:01:44,484
 Now the point of FinSight: just ask.
 
 9
-00:01:26,357 --> 00:01:42,357
+00:01:44,484 --> 00:02:01,948
 Q1 — forward risk. Answer leads with the CRITICAL stream and cites [FACT-012].
 
 10
-00:01:42,357 --> 00:01:53,560
+00:02:01,948 --> 00:02:14,492
 Q2 — backward look. Spike, baseline, z-score and suspected cause — all cited.
 
 11
-00:01:53,560 --> 00:02:05,564
+00:02:14,492 --> 00:02:28,534
 Q3 — drill-down. Naming a region + service boosts exact-match facts.
 
 12
-00:02:05,564 --> 00:02:17,564
+00:02:28,534 --> 00:02:40,509
 Q4 — a health check on one stream: capacity and cost evidence together.
 
 13
-00:02:17,564 --> 00:02:31,564
+00:02:40,509 --> 00:02:55,468
 Q5 — off-domain. No evidence, no answer. FinSight declines instead of hallucinating.
 
 14
-00:02:31,564 --> 00:02:43,164
+00:02:55,468 --> 00:03:08,581
 Everything here is also an API. The same grounded answers, citations and evidence are one POST away, so FinSight can sit behind Slack, Teams, or an agent.
 
 15
-00:02:43,164 --> 00:02:54,765
+00:03:08,581 --> 00:03:21,740
 FinSight 2.0: deterministic engines own the numbers, the language model only phrases them. Runs offline in template mode, or fluent with Claude — one command to demo.
 

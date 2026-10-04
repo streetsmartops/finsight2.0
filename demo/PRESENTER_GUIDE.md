@@ -1,7 +1,7 @@
 # FinSight 2.0 — Presenter guide (live demo)
 
 **Run time:** 8 minutes (short) or 15 minutes (with Q&A).
-**Backup:** [`docs/media/finsight_demo.mp4`](../docs/media/finsight_demo.mp4), a 3-minute captioned recording of this same flow.
+**Backup:** [`docs/media/finsight_demo.mp4`](../docs/media/finsight_demo.mp4), a 3½-minute recording of this same flow with captions and a voice-over. It can play unattended.
 
 ---
 

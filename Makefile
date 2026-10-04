@@ -2,7 +2,7 @@
 PORT ?= 8000
 export PYTHONPATH := $(CURDIR)/src
 
-.PHONY: help install test run demo demo-offline demo-docker stop smoke docker video
+.PHONY: help install test run demo demo-offline demo-docker stop smoke docker video video-voiced
 
 help:          ## list targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  \033[36m%-13s\033[0m %s\n", $$1, $$2}'
@@ -34,5 +34,10 @@ smoke:         ## pre-flight check against a running server
 docker:        ## build the container image
 	docker build -t finsight:demo .
 
+VOICE ?= en-us-libritts-high.onnx
+
 video:         ## re-record the captioned demo video (server must be running)
 	python demo/video/record_demo.py --url http://localhost:$(PORT)
+
+video-voiced:  ## same, with Piper voice-over (VOICE=path/to/model.onnx, see docs/HOW_TO.md)
+	python demo/video/record_demo.py --url http://localhost:$(PORT) --voice $(VOICE) --speaker 7

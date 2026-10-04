@@ -15,6 +15,17 @@ can never drift apart. Re-record after any UI change:
     ./demo/demo.sh --offline            # start the cockpit (template mode)
     python demo/video/record_demo.py    # ~2.5 min recording
 
+Optional voice-over (offline neural TTS via Piper):
+
+    pip install piper-tts
+    curl -L -O https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-libritts-high.tar.gz
+    tar xzf voice-en-us-libritts-high.tar.gz
+    python demo/video/record_demo.py --voice en-us-libritts-high.onnx --speaker 7
+
+Each scene then holds until its narration finishes, and the clips are mixed
+onto the video at each scene's start time. The LibriTTS voice is CC BY 4.0;
+the credit is added to the outro card and narration.md automatically.
+
 Requires: playwright (Python) + ffmpeg. Chromium is located via
 FINSIGHT_CHROMIUM, /opt/pw-browsers/chromium, or `playwright install chromium`.
 """
@@ -34,6 +45,7 @@ from playwright.sync_api import Page, sync_playwright
 OUT = Path(__file__).resolve().parent / "out"
 W, H = 1440, 900
 WORDS_PER_SEC = 2.5          # calm presenter pace
+VOICED = False               # set by --voice; adds the voice credit to the outro
 
 # --------------------------------------------------------------------------- #
 # Overlay helpers (injected into the page)
@@ -153,6 +165,15 @@ ${esc(JSON.stringify(slim, null, 2))}</pre>`);
     }""")
 
 
+def _outro(p: Page) -> None:
+    credit = (f"<p style='font-size:15px;color:#5A6B7C;margin-top:28px'>{VOICE_CREDIT}</p>"
+              if VOICED else "")
+    card(p, "<h1>Fin<span>Sight</span> 2.0</h1>"
+            "<p>Engines own the numbers · the LLM only phrases them · every claim cited.<br><br>"
+            "<code style='color:#35E0A1'>./demo/demo.sh</code> &nbsp;·&nbsp; "
+            "<code style='color:#35E0A1'>docker compose up</code></p>" + credit)
+
+
 def _clear_card(p: Page) -> None:
     card(p, "")
 
@@ -219,11 +240,7 @@ SCENES: list[Scene] = [
     Scene("", "FinSight 2.0: deterministic engines own the numbers, the language model only "
               "phrases them. Runs offline in template mode, or fluent with Claude — one command "
               "to demo.",
-          6.0, lambda p: card(p, "<h1>Fin<span>Sight</span> 2.0</h1>"
-                                 "<p>Engines own the numbers · the LLM only phrases them · "
-                                 "every claim cited.<br><br>"
-                                 "<code style='color:#35E0A1'>./demo/demo.sh</code> &nbsp;·&nbsp; "
-                                 "<code style='color:#35E0A1'>docker compose up</code></p>"),
+          6.0, lambda p: _outro(p),
           is_card=True),
 ]
 
@@ -249,7 +266,60 @@ def _chromium_path() -> str | None:
     return None
 
 
-def record(url: str) -> Path:
+# --------------------------------------------------------------------------- #
+# Voice-over
+# --------------------------------------------------------------------------- #
+
+VOICE_CREDIT = ("Voice: Piper TTS · LibriTTS (CC BY 4.0, Zen et al., OpenSLR 60)")
+
+# Say identifiers the way a presenter would, not the way a TTS engine guesses.
+SAY = [
+    (r"\bFinSight 2\.0\b", "FinSight two point oh"),
+    (r"\bCapacity-Mngt-App\b", "Capacity Management App"),
+    (r"\bCost-Mngt-App\b", "Cost Management App"),
+    (r"\bus-east-1\b", "U S East one"),
+    (r"\beu-west-1\b", "E U West one"),
+    (r"\bFACT-0?(\d)(\d)(\d)\b", r"fact \1 \2 \3"),
+    (r"\bFastAPI\b", "Fast A P I"),
+    (r"\bAPI\b", "A P I"),
+    (r"\bAWS\b", "A W S"),
+    (r"\bKPI\b", "K P I"),
+    (r"\bRDS\b", "R D S"),
+    (r"\bRAG\b", "rag"),
+    (r"\bMAD\b", "M A D"),
+    (r"\bPOST\b", "post"),
+    (r"\bCRITICAL\b", "critical"),
+    (r"\b167\b", "one hundred sixty-seven"),
+    (r" — ", ", "),
+]
+
+
+def speakable(text: str) -> str:
+    import re
+    for pat, rep in SAY:
+        text = re.sub(pat, rep, text)
+    return text
+
+
+def synthesize(voice: str, speaker: int, length_scale: float) -> list[tuple[Path, float]]:
+    """Render each scene's narration to a WAV; return (path, seconds) per scene."""
+    import wave
+    vo = OUT / "vo"
+    vo.mkdir(parents=True, exist_ok=True)
+    clips = []
+    for i, sc in enumerate(SCENES):
+        wav = vo / f"{i:02d}.wav"
+        subprocess.run(
+            ["python", "-m", "piper", "-m", voice, "-s", str(speaker),
+             "--length-scale", str(length_scale), "--sentence-silence", "0.25", "-f", str(wav)],
+            input=speakable(sc.narration).encode(), check=True, capture_output=True,
+        )
+        with wave.open(str(wav)) as w:
+            clips.append((wav, w.getnframes() / w.getframerate()))
+    return clips
+
+
+def record(url: str, clips: list[tuple[Path, float]] | None = None) -> Path:
     OUT.mkdir(parents=True, exist_ok=True)
     for old in OUT.glob("*.webm"):
         old.unlink()
@@ -270,7 +340,7 @@ def record(url: str) -> Path:
         page.wait_for_selector("#capacity table", timeout=120_000)
         page.wait_for_selector("#chart svg", timeout=120_000)
 
-        for sc in SCENES:
+        for idx, sc in enumerate(SCENES):
             start = time.monotonic() - t0
             if not sc.is_card:
                 caption(page, sc.caption)
@@ -279,23 +349,39 @@ def record(url: str) -> Path:
                 caption(page, "")
             # Hold long enough for the narration to be read aloud at a calm
             # pace, so a voice-over recorded against narration.md fits.
-            spoken = len(sc.narration.split()) / WORDS_PER_SEC
+            spoken = clips[idx][1] if clips else len(sc.narration.split()) / WORDS_PER_SEC
             elapsed = time.monotonic() - t0 - start
             time.sleep(max(sc.hold, spoken - elapsed + 0.8))
             timeline.append((start, time.monotonic() - t0, sc))
 
         time.sleep(0.5)
+        wall = time.monotonic() - t0
         video_path = Path(page.video.path())
         ctx.close()
         browser.close()
 
+    # The recording starts a moment before t0 (page creation); measure that
+    # lead so captions and voice land on the right frames.
+    vdur = float(subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+         str(video_path)], capture_output=True, text=True, check=True).stdout.strip() or wall)
+    lead = max(0.0, vdur - wall)
+    timeline = [(a + lead, b + lead, sc) for a, b, sc in timeline]
+
     mp4 = OUT / "finsight_demo.mp4"
-    subprocess.run(
-        ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video_path),
-         "-c:v", "libx264", "-preset", "slow", "-crf", "26", "-pix_fmt", "yuv420p",
-         "-movflags", "+faststart", str(mp4)],
-        check=True,
-    )
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video_path)]
+    if clips:
+        for wav, _ in clips:
+            cmd += ["-i", str(wav)]
+        delays = "".join(
+            f"[{i + 1}:a]adelay={int(a * 1000)}:all=1[a{i}];" for i, (a, _b, _sc) in enumerate(timeline))
+        mix = "".join(f"[a{i}]" for i in range(len(clips)))
+        cmd += ["-filter_complex", f"{delays}{mix}amix=inputs={len(clips)}:normalize=0,"
+                                   f"loudnorm=I=-16:TP=-1.5:LRA=11[aout]",
+                "-map", "0:v", "-map", "[aout]", "-c:a", "aac", "-b:a", "128k", "-ar", "44100"]
+    cmd += ["-c:v", "libx264", "-preset", "slow", "-crf", "26", "-pix_fmt", "yuv420p",
+            "-movflags", "+faststart", str(mp4)]
+    subprocess.run(cmd, check=True)
     video_path.unlink(missing_ok=True)
 
     # Subtitles + narration from the same timeline.
@@ -306,7 +392,10 @@ def record(url: str) -> Path:
             f.write(f"{i}\n{_ts(a)} --> {_ts(b)}\n{strip(sc.caption) or strip(sc.narration)}\n\n")
     with open(OUT / "narration.md", "w") as f:
         f.write("# FinSight 2.0 demo — narration script\n\n"
-                "Timestamps match `finsight_demo.mp4`. Read at a calm pace; each line fits its scene.\n\n"
+                + ("The video carries a generated voice-over of these lines. "
+                   f"{VOICE_CREDIT}.\n\nTo re-voice it yourself, mute the video and read each line from its timestamp.\n\n"
+                   if clips else
+                   "Timestamps match `finsight_demo.mp4`. Read at a calm pace; each line fits its scene.\n\n") +
                 "| Time | On screen | Say |\n|---|---|---|\n")
         for a, _b, sc in timeline:
             f.write(f"| {_ts(a, '.')[3:8]} | {strip(sc.caption) or '(title card)'} | {sc.narration} |\n")
@@ -318,8 +407,17 @@ def main() -> None:
     ap.add_argument("--url", default="http://localhost:8000")
     ap.add_argument("--publish", action="store_true",
                     help="also copy outputs into docs/media/ for the repo")
+    ap.add_argument("--voice", help="Piper .onnx voice model; adds a generated voice-over")
+    ap.add_argument("--speaker", type=int, default=7, help="speaker id for multi-speaker voices")
+    ap.add_argument("--length-scale", type=float, default=1.08, help=">1 speaks slower")
     args = ap.parse_args()
-    mp4 = record(args.url)
+    clips = None
+    if args.voice:
+        global VOICED
+        VOICED = True
+        clips = synthesize(args.voice, args.speaker, args.length_scale)
+        print(f"voice-over: {len(clips)} clips, {sum(d for _, d in clips):.0f}s of speech")
+    mp4 = record(args.url, clips)
     print(f"video     -> {mp4}")
     print(f"subtitles -> {OUT / 'finsight_demo.srt'}")
     print(f"narration -> {OUT / 'narration.md'}")
