@@ -7,8 +7,11 @@ It was verified locally with `docker build` and `docker run` plus [`smoke_test.s
 > Before pointing it at real billing data, put it behind SSO or an auth proxy (Cloudflare Access, IAP or oauth2-proxy) and restrict CORS.
 > The `ANTHROPIC_API_KEY` is only ever read server-side.
 
+> For **GitHub Pages** (static, always on) and **Hugging Face Spaces** (live app), both auto-deployed by GitHub Actions, see [`docs/PUBLIC_DEMO.md`](../../docs/PUBLIC_DEMO.md).
+
 | Target | Time to URL | Cost | Best for |
 |---|---|---|---|
+| Hugging Face Space | ~10 min | free CPU tier, sleeps when idle | public live demo, see `docs/PUBLIC_DEMO.md` |
 | Render (Blueprint) | ~5 min | free tier, sleeps when idle | async sharing, recruiters, reviewers |
 | Fly.io | ~5 min | ~US$2–5/mo with one warm machine | live demo, India region (`bom`) |
 | Google Cloud Run | ~5 min | scales to zero, pay per request | GCP shops |

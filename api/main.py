@@ -30,11 +30,14 @@ import os
 import sys
 from pathlib import Path
 
-from fastapi import FastAPI
+import time
+from collections import defaultdict, deque
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Make the package importable whether run from repo root or elsewhere.
 ROOT = Path(__file__).resolve().parent.parent
@@ -85,7 +88,26 @@ def _bootstrap() -> None:
 # --------------------------------------------------------------------------- #
 
 class AskRequest(BaseModel):
-    question: str
+    question: str = Field(..., max_length=500)
+
+
+# Optional per-client limit for public deployments (e.g. a Hugging Face Space
+# with an LLM key): FINSIGHT_ASK_PER_MIN=20. Unset or 0 disables it.
+ASK_PER_MIN = int(os.environ.get("FINSIGHT_ASK_PER_MIN", "0") or 0)
+_ask_log: dict[str, deque] = defaultdict(deque)
+
+
+def _rate_limit(request: Request) -> None:
+    if ASK_PER_MIN <= 0:
+        return
+    fwd = request.headers.get("x-forwarded-for", "")
+    client = fwd.split(",")[0].strip() or (request.client.host if request.client else "?")
+    now, log = time.monotonic(), _ask_log[client]
+    while log and now - log[0] > 60:
+        log.popleft()
+    if len(log) >= ASK_PER_MIN:
+        raise HTTPException(429, f"Limit is {ASK_PER_MIN} questions per minute. Try again shortly.")
+    log.append(now)
 
 
 # --------------------------------------------------------------------------- #
@@ -175,7 +197,8 @@ def forecast_cost_endpoint() -> dict:
 
 
 @app.post("/api/ask")
-def ask(req: AskRequest) -> dict:
+def ask(req: AskRequest, request: Request) -> dict:
+    _rate_limit(request)
     ans = State.rag.ask(req.question)
     return ans.to_dict()
 

@@ -78,6 +78,9 @@ If a call fails, FinSight falls back to the template and appends a note. The coc
 Never commit the key: `.env` is already git-ignored.
 
 ### Deploy a shareable URL
+For a public demo, follow [`docs/PUBLIC_DEMO.md`](PUBLIC_DEMO.md): GitHub Pages (static, always on) and a Hugging Face Space (live app), both deployed automatically from `main`.
+To cap questions per visitor on any public deployment, set `FINSIGHT_ASK_PER_MIN` (for example `20`).
+
 See [`demo/deploy/README.md`](../demo/deploy/README.md) for Render, Fly.io, Cloud Run and VM recipes.
 The API has no auth, so keep deployments to synthetic data or put them behind SSO.
 

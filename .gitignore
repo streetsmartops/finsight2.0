@@ -11,3 +11,4 @@ deck/node_modules/
 demo/video/out/
 .demo-server.log
 .demo-server.pid
+site/
