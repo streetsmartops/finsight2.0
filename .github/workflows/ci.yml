@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: pip install numpy pandas scikit-learn fastapi "uvicorn[standard]" pydantic httpx pytest
+      - name: Tests (engines, grounding contract, static-demo parity)
+        run: PYTHONPATH=src pytest tests -v
+      - name: Static demo builds
+        run: python demo/static/build.py --out site
+      - name: Hugging Face Space stages
+        run: python demo/hf_space/deploy.py --space ci/dry-run --dry-run

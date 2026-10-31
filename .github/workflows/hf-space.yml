@@ -1,0 +1,37 @@
+# Mirrors the app to a Hugging Face Space (Docker SDK) on every push to main.
+# One-time setup (repo Settings → Secrets and variables → Actions):
+#   secret   HF_TOKEN  = a Hugging Face *write* token (huggingface.co/settings/tokens)
+#   variable HF_SPACE  = <hf-username>/finsight
+# Without both, the job skips cleanly.
+name: Deploy live demo (Hugging Face Space)
+
+on:
+  push:
+    branches: [main]
+    paths: ["src/**", "api/**", "Dockerfile", "requirements.txt", "demo/hf_space/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_SPACE: ${{ vars.HF_SPACE }}
+    steps:
+      - name: Check configuration
+        if: env.HF_TOKEN == '' || env.HF_SPACE == ''
+        run: echo "::notice::HF_TOKEN secret or HF_SPACE variable not set; skipping Space deploy."
+      - uses: actions/checkout@v4
+        if: env.HF_TOKEN != '' && env.HF_SPACE != ''
+      - uses: actions/setup-python@v5
+        if: env.HF_TOKEN != '' && env.HF_SPACE != ''
+        with:
+          python-version: "3.11"
+      - name: Deploy
+        if: env.HF_TOKEN != '' && env.HF_SPACE != ''
+        run: |
+          pip install "huggingface_hub>=0.24"
+          python demo/hf_space/deploy.py --space "$HF_SPACE"

@@ -4,7 +4,8 @@
 |---|---|
 | **See it working in 3 minutes** | [Demo video](media/finsight_demo.mp4) (captions + generated voice-over) · [subtitles](media/finsight_demo.srt) · [narration script](media/narration.md) |
 | **Run a live demo** | `./demo/demo.sh --offline`, then the [Presenter guide](../demo/PRESENTER_GUIDE.md) |
-| **Get a shareable URL** | [Deploy recipes](../demo/deploy/README.md): Render · Fly.io · Cloud Run · VM |
+| **Publish a public demo** | [GitHub Pages + Hugging Face Space guide](PUBLIC_DEMO.md): auto-deployed from `main` |
+| **Get a shareable URL elsewhere** | [Deploy recipes](../demo/deploy/README.md): Render · Fly.io · Cloud Run · VM |
 | **Understand the system** | [Architecture](diagrams/ARCHITECTURE.md): context, containers, components, deployment |
 | **Follow a number end to end** | [Data flow](diagrams/DATA_FLOW.md): DFD L0/L1, `/api/ask` sequence, fact-card lineage |
 | **See specified behaviour** | [BDD flows](diagrams/BDD_FLOWS.md) + [Gherkin features](bdd/) with traceability to tests |

@@ -66,6 +66,7 @@ finance. It is enforced in code (a retrieval relevance floor) and verified in te
 
 ## Demo kit & docs
 
+- **Try it live:** [static demo on GitHub Pages](https://streetsmartops.github.io/finsight2.0/) (runs in your browser) · live app on Hugging Face Spaces, see [publishing guide](docs/PUBLIC_DEMO.md)
 - **Watch:** [3½-minute narrated demo](docs/media/finsight_demo.mp4), recorded from the live cockpit with captions and a generated voice-over
 - **Present:** `./demo/demo.sh --offline` (venv, tests, server, smoke test) · `docker compose up --build` · [presenter guide](demo/PRESENTER_GUIDE.md) · [deploy recipes](demo/deploy/README.md)
 - **Understand:** [architecture](docs/diagrams/ARCHITECTURE.md) · [data flow](docs/diagrams/DATA_FLOW.md) · [BDD flows](docs/diagrams/BDD_FLOWS.md) · [how-to](docs/HOW_TO.md)
